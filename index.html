@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcul Prorata Remplacement Autre Manufacturier / Cross-Brand Proration Calculator</title>
+    <style>
+        /* Styles généraux */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            padding: 10px; 
+            box-sizing: border-box;
+            overflow-y: auto; 
+        }
+        .main-container {
+            display: flex;
+            gap: 25px; 
+            align-items: flex-start; 
+            max-width: 900px; 
+            width: 100%;
+            justify-content: center;
+        }
+
+        /* Styles de la Calculatrice */
+        .calculatrice {
+            background-color: white;
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            width: 320px; 
+            min-width: 320px; 
+            text-align: center;
+            border-top: 4px solid #79C33D; 
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .logo { margin-bottom: 20px; }
+        .logo img { max-width: 180px; height: auto; }
+        h2 { color: #2c3e50; margin-bottom: 20px; font-size: 20px; }
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; color: #555; font-weight: 600; font-size: 0.9em; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; color: #333; }
+        .input-wrapper { position: relative; }
+        .unit-label { position: absolute; right: 10px; top: 10px; color: #999; font-size: 0.9em; }
+
+        button {
+            width: 100%;
+            padding: 12px; 
+            background-color: #79C33D; 
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 17px;
+            cursor: pointer;
+            margin-top: 10px; 
+            transition: background 0.3s;
+        }
+        button:hover { background-color: #65a834; }
+        
+        .resultat {
+            margin-top: 20px; 
+            padding: 15px; 
+            background-color: #f7fff5; 
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        .label-res {
+            font-size: 14px; 
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .valeur-res {
+            font-size: 28px; 
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .charge-finale {
+            color: #c0392b; 
+        }
+        
+        /* Styles pour la section Légende */
+        .legende {
+            padding: 20px; 
+            text-align: left;
+            border: 1px dashed #79C33D; 
+            border-radius: 10px;
+            background-color: #f7fff5; 
+            font-size: 0.9em; 
+            line-height: 1.5;
+            max-width: 500px; 
+            width: 100%;
+            flex-grow: 1;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+        }
+        .legende h3 {
+            text-align: center; 
+            margin-bottom: 15px; 
+            font-size: 1.2em;
+            color: #2c3e50;
+        }
+        .legende ul { list-style-type: none; padding-left: 0; margin-top: 15px; }
+        .legende li { margin-bottom: 10px; position: relative; padding-left: 20px; }
+        .legende li::before {
+            content: '•'; 
+            color: #79C33D; 
+            font-size: 1.1em;
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: bold;
+        }
+        .legende .important {
+            font-weight: bold;
+            color: #c0392b; 
+        }
+
+        /* Sélecteur de langue */
+        .language-selector {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .language-selector button {
+            width: auto;
+            padding: 5px 10px;
+            margin: 0 5px;
+            background-color: #34495e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+            cursor: pointer;
+        }
+        .language-selector button.active {
+            opacity: 1;
+            font-weight: bold;
+            background-color: #2c3e50;
+        }
+
+        /* MEDIA QUERIES */
+        @media (max-width: 800px) {
+            .main-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+            }
+            .calculatrice, .legende {
+                max-width: 95%; 
+                min-width: 300px;
+            }
+            body { padding-top: 50px; }
+            .language-selector { top: 10px; right: 50%; transform: translateX(50%); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="language-selector">
+        <button id="btn-fr" onclick="setLang('fr')" class="active">FR</button>
+        <button id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+
+    <div class="main-container">
+        <div class="calculatrice">
+            <div class="logo">
+                <img src="stox_logo.png" alt="Stox Distribution Logo">
+            </div>
+            
+            <h2 id="calc-title">Calculateur de Remplacement (Autre Marque)</h2>
+            
+            <div class="input-group">
+                <label id="label-chargeInitiale" for="chargeInitiale">Charge calculée (Pneu initial)</label>
+                <div class="input-wrapper">
+                    <input type="number" id="chargeInitiale" placeholder="ex: 123.05">
+                    <span class="unit-label">$</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label id="label-coutantInitial" for="coutantInitial">Coût client Pneu Initial</label>
+                <div class="input-wrapper">
+                    <input type="number" id="coutantInitial" placeholder="ex: 312.11">
+                    <span class="unit-label">$</span>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label id="label-coutantRemplacement" for="coutantRemplacement">Coût client Pneu de Remplacement</label>
+                <div class="input-wrapper">
+                    <input type="number" id="coutantRemplacement" placeholder="ex: 386.57">
+                    <span class="unit-label">$</span>
+                </div>
+            </div>
+
+            <button onclick="calculerRemplacement()" id="btn-calculer">Calculer la Charge Finale</button>
+
+            <div class="resultat">
+                <div class="label-res" id="res-label-finale">Charge Réelle au Consommateur</div>
+                <div class="valeur-res charge-finale" id="resChargeFinale">0.00 $</div>
+            </div>
+        </div>
+        
+        <div class="legende">
+            <h3 id="legende-title">Règles de Calcul pour Remplacement Inter-Marques</h3>
+            <ul id="regles-list">
+                <li>Le but de ce calcul est de connaître la charge consommateur, en fonction que le client ne perde ou ne fasse de profit.</li>
+                <li>Ce calcul est valide seulement si le coût client du pneu de remplacement est plus élevé que le coût client du pneu initial.</li>
+                <li>Le client sera crédité sur l’achat de remplacement moins la charge consommateur.</li>
+                <li><span class="important">Ajout important:</span> Si le pneu initial est discontinué, faire le calcul de charge avec un pneu équivalent dans la même marque.</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Dictionnaire des textes
+        const TEXTES = {
+            fr: {
+                calcTitle: "Calculateur de Remplacement (Autre Marque)",
+                labelChargeInitiale: "Charge calculée (Pneu initial)",
+                labelCoutantInitial: "Coût client Pneu Initial",
+                labelCoutantRemplacement: "Coût client Pneu de Remplacement",
+                btnCalculer: "Calculer la Charge Finale",
+                resChargeFinale: "Charge Réelle au Consommateur",
+                alertRemplir: "Veuillez remplir tous les champs !",
+                legendeTitle: "Règles de Calcul pour Remplacement Inter-Marques",
+                listRegles: [
+                    "Le but de ce calcul est de connaître la charge consommateur, en fonction que le client ne perde ou ne fasse de profit.",
+                    "Ce calcul est valide seulement si le coût client du pneu de remplacement est plus élevé que le coût client du pneu initial.",
+                    "Le client sera crédité sur l’achat de remplacement moins la charge consommateur.", // INTERVERTIS
+                    "<span class='important'>Ajout important:</span> Si le pneu initial est discontinué, faire le calcul de charge avec un pneu équivalent dans la même marque." // INTERVERTIS
+                ]
+            },
+            en: {
+                calcTitle: "Cross-Brand Replacement Calculator",
+                labelChargeInitiale: "Calculated Charge (Initial Tire)",
+                labelCoutantInitial: "Customer Cost Initial Tire",
+                labelCoutantRemplacement: "Customer Cost Replacement Tire",
+                btnCalculer: "Calculate Final Charge",
+                resChargeFinale: "Actual Customer Charge",
+                alertRemplir: "Please fill in all fields!",
+                legendeTitle: "Inter-Brand Replacement Calculation Rules",
+                listRegles: [
+                    "The purpose of this calculation is to determine the consumer's charge, ensuring the customer neither loses nor profits.",
+                    "This calculation is only valid if the customer cost of the replacement tire is higher than the customer cost of the initial tire.",
+                    "The customer will be credited on the replacement purchase minus the consumer charge.", // INTERVERTIS
+                    "<span class='important'>Important addition:</span> If the initial tire is discontinued, calculate the charge using an equivalent tire from the same brand." // INTERVERTIS
+                ]
+            }
+        };
+
+        let langue = 'fr';
+
+        function updateUI() {
+            try {
+                const t = TEXTES[langue];
+                
+                // Mise à jour des textes simples
+                if(document.getElementById('calc-title')) document.getElementById('calc-title').innerText = t.calcTitle;
+                if(document.getElementById('label-chargeInitiale')) document.getElementById('label-chargeInitiale').innerText = t.labelChargeInitiale;
+                if(document.getElementById('label-coutantInitial')) document.getElementById('label-coutantInitial').innerText = t.labelCoutantInitial;
+                if(document.getElementById('label-coutantRemplacement')) document.getElementById('label-coutantRemplacement').innerText = t.labelCoutantRemplacement;
+                if(document.getElementById('btn-calculer')) document.getElementById('btn-calculer').innerText = t.btnCalculer;
+                if(document.getElementById('res-label-finale')) document.getElementById('res-label-finale').innerText = t.resChargeFinale;
+                if(document.getElementById('legende-title')) document.getElementById('legende-title').innerText = t.legendeTitle;
+
+                // Mise à jour de la liste
+                const reglesList = document.getElementById('regles-list');
+                if (reglesList) {
+                    reglesList.innerHTML = t.listRegles.map(item => `<li>${item}</li>`).join('');
+                }
+
+                // Mise à jour des boutons
+                document.getElementById('btn-fr').classList.remove('active');
+                document.getElementById('btn-en').classList.remove('active');
+                document.getElementById(`btn-${langue}`).classList.add('active');
+                document.documentElement.lang = langue;
+                
+            } catch (e) {
+                console.error("Erreur dans updateUI:", e);
+            }
+        }
+
+        function setLang(newLang) {
+            langue = newLang;
+            updateUI();
+        }
+
+        function calculerRemplacement() {
+            let chargeInitiale = parseFloat(document.getElementById('chargeInitiale').value);
+            let coutantInitial = parseFloat(document.getElementById('coutantInitial').value);
+            let coutantRemplacement = parseFloat(document.getElementById('coutantRemplacement').value);
+
+            if (isNaN(chargeInitiale) || isNaN(coutantInitial) || isNaN(coutantRemplacement)) {
+                alert(TEXTES[langue].alertRemplir);
+                return;
+            }
+
+            let chargeFinale = 0;
+
+            if (coutantRemplacement > coutantInitial) {
+                let differenceCoutant = coutantRemplacement - coutantInitial; 
+                chargeFinale = chargeInitiale + differenceCoutant;
+            } else {
+                chargeFinale = chargeInitiale;
+            }
+
+            document.getElementById('resChargeFinale').innerText = chargeFinale.toFixed(2) + " $";
+        }
+
+        // Lance updateUI au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUI();
+        });
+    </script>
+
+</body>
+</html>
